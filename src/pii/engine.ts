@@ -143,14 +143,13 @@ export async function dehydrate(
     const now = new Date().toISOString();
     await db
       .prepare(
-        `INSERT INTO pii_entities (id, user_id, entity_id, entity_type, real_value, created_at, last_used)
-         VALUES (?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(user_id, entity_id) DO UPDATE SET last_used = ?`,
+        `INSERT INTO pii_entities (entity_id, user_id, entity_type, real_value, created_at, last_used_at)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON CONFLICT(entity_id, user_id) DO UPDATE SET last_used_at = ?`,
       )
       .bind(
-        crypto.randomUUID(),
-        userId,
         entityId,
+        userId,
         match.type,
         match.value,
         now,
