@@ -46,12 +46,14 @@ export const STATIC_RULES: StaticRule[] = [
     pattern: /```/s,
     action: 'escalation',
     confidence: 0.8,
+    isCommand: false,
   },
   {
     name: 'long_message',
     pattern: /.{500,}/s,
     action: 'escalation',
     confidence: 0.6,
+    isCommand: false,
   },
 
   // --- Escalation patterns (complex tasks) ---
@@ -60,6 +62,7 @@ export const STATIC_RULES: StaticRule[] = [
     pattern: /\b(debug|traceback|error|fix|broken|bug)\b/i,
     action: 'escalation',
     confidence: 0.7,
+    isCommand: false,
   },
   {
     name: 'write_code',
@@ -67,30 +70,35 @@ export const STATIC_RULES: StaticRule[] = [
       /\b(write|implement|create|build|code)\s+(a |the )?(function|class|module|script|program|app|service|api|endpoint)/i,
     action: 'escalation',
     confidence: 0.7,
+    isCommand: false,
   },
   {
     name: 'explain_complex',
     pattern: /\b(explain|describe)\b.*\b(in detail|thoroughly|step\.?by\.?step|comprehensive)\b/i,
     action: 'escalation',
     confidence: 0.6,
+    isCommand: false,
   },
   {
     name: 'plan',
     pattern: /\b(plan|strategy|architecture|roadmap|migration)\b/i,
     action: 'escalation',
     confidence: 0.7,
+    isCommand: false,
   },
   {
     name: 'review',
     pattern: /\b(review|audit|critique|analyze|evaluate|improve|optimize)\b/i,
     action: 'escalation',
     confidence: 0.7,
+    isCommand: false,
   },
   {
     name: 'design',
     pattern: /\b(design|architect|structure|schema)\b/i,
     action: 'escalation',
     confidence: 0.7,
+    isCommand: false,
   },
 
   // --- Comparison (dual-model) ---
@@ -99,6 +107,7 @@ export const STATIC_RULES: StaticRule[] = [
     pattern: /\b(compare|vs|versus|difference)\b/i,
     action: 'compare',
     confidence: 0.5,
+    isCommand: false,
   },
 
   // --- Cheap patterns (simple queries) ---
@@ -107,18 +116,21 @@ export const STATIC_RULES: StaticRule[] = [
     pattern: /^(what|how|who|when|where|which|count|convert|define|calculate)\b/i,
     action: 'cheap',
     confidence: 0.7,
+    isCommand: false,
   },
   {
     name: 'acknowledgment',
     pattern: /^(ok|thanks|thank you|got it|sure|great|nice|cool)\b/i,
     action: 'cheap',
     confidence: 0.9,
+    isCommand: false,
   },
   {
     name: 'help',
     pattern: /^help$/i,
     action: 'cheap',
     confidence: 0.8,
+    isCommand: false,
   },
 ];
 

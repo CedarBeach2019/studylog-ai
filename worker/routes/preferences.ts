@@ -1,31 +1,37 @@
 /**
  * User preferences endpoints.
- * @see docs/database/SCHEMA-DESIGN.md §1.7
  */
 import { Hono } from 'hono';
-import type { Env } from '../../src/types.js';
+import type { Env, Variables } from '../../src/types.js';
 
-const preferences = new Hono<{ Bindings: Env }>();
+const preferenceRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-preferences.get('/', async (c) => {
-  // TODO: Get all preferences for current user
-  return c.json({ preferences: {} });
+preferenceRoutes.get('/', async (c) => {
+  const userId = c.get('userId');
+  const result = await c.env.DB.prepare('SELECT key, value, updated_at FROM user_preferences WHERE user_id = ? ORDER BY key')
+    .bind(userId).all<{ key: string; value: string; updated_at: string }>();
+  const prefs: Record<string, string> = {};
+  for (const row of result.results ?? []) prefs[row.key] = row.value;
+  return c.json({ preferences: prefs });
 });
 
-preferences.get('/:key', async (c) => {
+preferenceRoutes.put('/:key', async (c) => {
+  const userId = c.get('userId');
   const key = c.req.param('key');
-  return c.json({ key, value: null });
+  const body = (await c.req.json<{ value: string }>().catch(() => ({ value: '' as string }))) as { value: string };
+  if (typeof body.value !== 'string') return c.json({ error: { type: 'validation_error', code: 'missing_field', message: 'value (string) is required' } }, 422);
+  const now = new Date().toISOString();
+  await c.env.DB.prepare(
+    `INSERT INTO user_preferences (user_id, key, value, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(user_id, key) DO UPDATE SET value = ?, updated_at = ?`
+  ).bind(userId, key, body.value, now, body.value, now).run();
+  return c.json({ key, value: body.value, updated_at: now });
 });
 
-preferences.put('/:key', async (c) => {
-  // TODO: Set preference key-value pair
+preferenceRoutes.delete('/:key', async (c) => {
+  const userId = c.get('userId');
   const key = c.req.param('key');
-  return c.json({ updated: key });
-});
-
-preferences.delete('/:key', async (c) => {
-  const key = c.req.param('key');
+  await c.env.DB.prepare('DELETE FROM user_preferences WHERE user_id = ? AND key = ?').bind(userId, key).run();
   return c.json({ deleted: key });
 });
 
-export default preferences;
+export default preferenceRoutes;

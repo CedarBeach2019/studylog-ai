@@ -2,18 +2,17 @@
  * Runtime configuration endpoint.
  */
 import { Hono } from 'hono';
-import type { Env } from '../../src/types.js';
+import type { Env, Variables } from '../../src/types.js';
 
-const config = new Hono<{ Bindings: Env }>();
+const configRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-config.get('/', async (c) => {
-  // TODO: Return runtime config (feature flags, limits, etc.)
+configRoutes.get('/', (c) => {
   return c.json({
-    environment: c.env.ENVIRONMENT,
+    environment: c.env.ENVIRONMENT ?? 'development',
     maxTokensPerRequest: 4096,
     supportedModels: ['deepseek-chat', 'deepseek-reasoner'],
-    draftProfiles: [],
+    features: { streaming: true, draftComparison: true, piiDehydration: true, sessionManagement: true },
   });
 });
 
-export default config;
+export default configRoutes;

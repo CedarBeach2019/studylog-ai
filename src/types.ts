@@ -5,14 +5,20 @@ export interface Env {
   KV: KVNamespace;
   R2: R2Bucket;
   ENVIRONMENT: string;
+  JWT_SECRET: string;
 }
+
+// ─── Hono Variables ────────────────────────────────────────────────────────
+
+export type Variables = {
+  userId: string;
+};
 
 // ─── Database row types (match Drizzle schema) ─────────────────────────────
 
 export interface Session {
   id: string;
   userId: string;
-  timestamp: string;
   summary: string;
   metadata: string;
   messageCount: number;
