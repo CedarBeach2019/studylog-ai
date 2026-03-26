@@ -1,0 +1,4 @@
+# Merge strategy for DMlog.ai fork
+app/ merge=theirs
+config/custom/ merge=ours
+docs/ merge=theirs

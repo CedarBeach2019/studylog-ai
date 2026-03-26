@@ -1,0 +1,135 @@
+[
+  {
+    "name": "Character Creation",
+    "pattern": "^/attack|^(create|make|build|roll up).*(character|PC|hero|avatar)|^/character",
+    "template": "dnd_character",
+    "action": "escalation",
+    "confidence": 0.90,
+    "description": "Character creation and sheet generation"
+  },
+  {
+    "name": "Attack/Combat",
+    "pattern": "^/attack|^(combat|fight|battle|initiative|turn order)",
+    "template": "dnd_combat",
+    "action": "escalation",
+    "confidence": 0.95,
+    "description": "Combat encounter management and attack resolution"
+  },
+  {
+    "name": "Rules Lookup",
+    "pattern": "^/rules|^(rule|ruling|how.*(work|do)|does|can.*(i|you)|PHB|DMG|what.*(happens|is the)|page \\d+)",
+    "template": "dnd_rules",
+    "action": "escalation",
+    "confidence": 0.92,
+    "description": "D&D 5e rule lookups with source citations"
+  },
+  {
+    "name": "NPC Generation",
+    "pattern": "^/npc|^(NPC|non-player|generate.*(npc|character|villain|shopkeep|guard|merchant|barmaid|stable|blacksmith))",
+    "template": "dnd_npc",
+    "action": "compare",
+    "confidence": 0.88,
+    "description": "Generate NPCs with personality, stats, and dialogue"
+  },
+  {
+    "name": "Scene Description",
+    "pattern": "^/describe|^(describe|scene|atmosphere|what.*(look|see|smell|hear|feel)|enter|arrive|walk into|you open)",
+    "template": "dnd_description",
+    "action": "cheap",
+    "confidence": 0.85,
+    "description": "Atmospheric scene and environment descriptions"
+  },
+  {
+    "name": "Loot/Treasure",
+    "pattern": "^/loot|^(loot|treasure|hoard|reward|what.*(drop|find|carry|has)|spoil|plunder)",
+    "template": "dnd_loot",
+    "action": "cheap",
+    "confidence": 0.90,
+    "description": "Treasure hoard and loot generation"
+  },
+  {
+    "name": "Rest Mechanics",
+    "pattern": "^/rest|^(short rest|long rest|hit dice|recover|heal.*rest|watch rotation|sleep)",
+    "template": "dnd_rest",
+    "action": "cheap",
+    "confidence": 0.93,
+    "description": "Short rest, long rest, hit dice, and recovery tracking"
+  },
+  {
+    "name": "Social Interaction",
+    "pattern": "^/social|^(persuade|intimidate|deceive|talk|negotiate|convince|social|diplomacy|charm|threaten|haggle|barter)",
+    "template": "dnd_social",
+    "action": "cheap",
+    "confidence": 0.87,
+    "description": "Social interaction adjudication and NPC reactions"
+  },
+  {
+    "name": "Dice Roll",
+    "pattern": "^/roll|^/r |^\\d+d\\d+",
+    "template": null,
+    "action": "local",
+    "handler": "diceRoller",
+    "confidence": 0.99,
+    "description": "Dice rolling — handled locally, no AI needed",
+    "timeout": 1000
+  },
+  {
+    "name": "Initiative Tracker",
+    "pattern": "^/initiative|^(init|roll initiative|start combat|turn order)",
+    "template": "dnd_combat",
+    "action": "local",
+    "handler": "initiativeTracker",
+    "confidence": 0.95,
+    "description": "Initiative tracking and turn management",
+    "timeout": 3000
+  },
+  {
+    "name": "Map/Exploration",
+    "pattern": "^/map|^(map|hex|explore|travel|journey|march|overland)",
+    "template": "dnd_description",
+    "action": "compare",
+    "confidence": 0.80,
+    "description": "Map descriptions and travel encounters",
+    "comparisons": 2
+  },
+  {
+    "name": "Lore/Worldbuilding",
+    "pattern": "^/lore|^(lore|history|pantheon|religion|culture|faction|kingdom|empire|prophecy|legend|myth)",
+    "template": "dnd_rules",
+    "action": "escalation",
+    "confidence": 0.85,
+    "description": "World lore, history, and canon references"
+  },
+  {
+    "name": "Skill Check",
+    "pattern": "^/skill|^(skill check|ability check|saving throw|perception check|stealth check|athletics|acrobatics|arcana|investigation|medicine|nature|religion|survival|insight|performance|sleight of hand)",
+    "template": "dnd_rules",
+    "action": "cheap",
+    "confidence": 0.88,
+    "description": "Skill and ability check adjudication"
+  },
+  {
+    "name": "Backstory",
+    "pattern": "^/backstory|^(backstory|back story|character history|origin|where.*(come from|born|grow up))",
+    "template": "dnd_character",
+    "action": "escalation",
+    "confidence": 0.82,
+    "description": "Character backstory generation and integration"
+  },
+  {
+    "name": "Shop/Merchant",
+    "pattern": "^/shop|^(shop|buy|sell|trade|merchant|market|store|inventory|price|cost)",
+    "template": "dnd_loot",
+    "action": "cheap",
+    "confidence": 0.84,
+    "description": "Shop inventory, pricing, and transactions"
+  },
+  {
+    "name": "Puzzle/Riddle",
+    "pattern": "^/puzzle|^(puzzle|riddle|lock|trap|door|mechanism|password|code|cipher)",
+    "template": "dnd_description",
+    "action": "escalation",
+    "confidence": 0.83,
+    "description": "Puzzle and riddle design or solving"
+  }
+]
