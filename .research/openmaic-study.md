@@ -479,3 +479,571 @@ const result = uniquifyMediaElementIds(enriched);
      tokens: MapToken[];
      fogOfWar: FogArea[];
      layers: MapLayer[]; // Terrain, objects, tokens
+   }
+   ```
+
+### Player's Game Interface
+
+**Core Components**:
+
+1. **Character Sheet**:
+   ```typescript
+   // Adapted from SlideRenderer for interactive character sheets
+   interface CharacterSheet {
+     basicInfo: { name, race, class, level, background };
+     abilities: { str, dex, con, int, wis, cha };
+     skills: Skill[];
+     inventory: Item[];
+     spells: Spell[];
+     features: Feature[];
+     // Interactive elements with real-time updates
+   }
+   ```
+
+2. **Dice Roller**:
+   ```typescript
+   // Integrated into ActionEngine
+   interface DiceRollAction {
+     type: 'roll_dice';
+     dice: string; // "2d20+5"
+     advantage?: boolean;
+     disadvantage?: boolean;
+     forCheck?: 'attack' | 'save' | 'skill' | 'ability';
+     targetDC?: number;
+   }
+   ```
+
+3. **Action Menu**:
+   ```typescript
+   // Adapted from Roundtable component
+   interface ActionMenu {
+     combatActions: CombatAction[];
+     skillActions: SkillAction[];
+     spellActions: SpellAction[];
+     itemActions: ItemAction[];
+     // Real-time availability based on character state
+   }
+   ```
+
+4. **Real-time Updates**:
+   - HP changes via SSE
+   - Condition notifications
+   - Initiative order display
+   - Chat with other players/DM
+
+### Spectator's Viewing Mode
+
+**Core Components**:
+
+1. **Live Game Stream**:
+   ```typescript
+   // Adapted from PlaybackEngine
+   class SpectatorView {
+     private engine: PlaybackEngine;
+     private scenes: GameScene[];
+     private currentView: 'dm' | 'player' | 'map' | 'overview';
+     
+     switchView(view: string): void {
+       // Switch between different perspectives
+     }
+   }
+   ```
+
+2. **Interactive Slides**:
+   - Scene descriptions with visuals
+   - NPC portraits and bios
+   - Location maps
+   - Item illustrations
+
+3. **Animations and Effects**:
+   - Spell effects (particle systems)
+   - Combat animations
+   - Environmental effects (rain, fog, lighting)
+   - Sound effects integration
+
+4. **Chat Overlay**:
+   - Live transcription of dialogue
+   - Emote reactions
+   - Polls and audience interaction
+   - Highlight important moments
+
+## StudyLog.ai Adaptation Blueprint
+
+### Interactive Study Sessions
+
+**Core Components**:
+
+1. **Generated Study Slides**:
+   ```typescript
+   // Direct port from OpenMAIC's slide generation
+   interface StudySlide {
+     topic: string;
+     difficulty: 'beginner' | 'intermediate' | 'advanced';
+     content: SlideContent;
+     keyPoints: string[];
+     examples: Example[];
+     practiceQuestions: QuizQuestion[];
+   }
+   ```
+
+2. **Quiz/Flashcard Mode**:
+   ```typescript
+   // Enhanced from OpenMAIC's quiz system
+   interface FlashcardDeck {
+     id: string;
+     title: string;
+     subject: string;
+     cards: Flashcard[];
+     spacedRepetition: boolean;
+     masteryTracking: MasteryStats;
+   }
+   
+   interface Flashcard {
+     front: string; // Question or term
+     back: string; // Answer or definition
+     hints: string[];
+     mnemonics: string[];
+     difficulty: number; // 1-5
+     lastReviewed: Date;
+     nextReview: Date;
+   }
+   ```
+
+3. **Collaborative Study Rooms**:
+   ```typescript
+   // Multi-user adaptation of Roundtable
+   interface StudyRoom {
+     id: string;
+     topic: string;
+     participants: StudyParticipant[];
+     whiteboard: StudyWhiteboard;
+     chat: StudyChat;
+     sharedResources: Resource[];
+     studyPlan: StudyPlan;
+   }
+   ```
+
+### Animation System for Learning
+
+**Educational Animations**:
+1. **Step-by-Step Explanations**:
+   - Math problem solving with whiteboard animations
+   - Science concept visualizations
+   - Language grammar diagrams
+   - Historical timeline animations
+
+2. **Interactive Simulations**:
+   - Physics experiments (pendulum, projectile motion)
+   - Chemistry molecule builders
+   - Biology cell animations
+   - Economics supply/demand curves
+
+3. **Memory Aids**:
+   - Mnemonic animations
+   - Concept mapping with animated connections
+   - Story-based learning with character animations
+   - Rhythm-based memorization (music + visuals)
+
+### Adaptive Learning Engine
+
+**Core Components**:
+```typescript
+interface AdaptiveLearningEngine {
+  // Track student performance
+  trackPerformance(topic: string, score: number, timeSpent: number): void;
+  
+  // Adjust difficulty
+  getNextTopic(currentMastery: number): string;
+  
+  // Generate personalized content
+  generatePersonalizedContent(
+    studentProfile: StudentProfile,
+    learningGoals: string[]
+  ): PersonalizedContent;
+  
+  // Provide feedback
+  getFeedback(
+    answers: Answer[],
+    studentStrengths: string[],
+    studentWeaknesses: string[]
+  ): Feedback;
+}
+```
+
+## Specific Code Patterns to Steal
+
+### 1. LangGraph Director Pattern
+
+**File**: `/tmp/OpenMAIC/lib/orchestration/director-graph.ts`
+
+**Key Pattern**: Unified graph for single/multi-agent with conditional edges
+
+```typescript
+// Worth stealing for TTRPG initiative tracking
+export function createOrchestrationGraph() {
+  const graph = new StateGraph(OrchestratorState)
+    .addNode('director', directorNode)
+    .addNode('agent_generate', agentGenerateNode)
+    .addEdge(START, 'director')
+    .addConditionalEdges('director', directorCondition, {
+      agent_generate: 'agent_generate',
+      [END]: END,
+    })
+    .addEdge('agent_generate', 'director');
+
+  return graph.compile();
+}
+```
+
+### 2. Stateless SSE Streaming
+
+**File**: `/tmp/OpenMAIC/app/api/chat/route.ts`
+
+**Key Pattern**: Heartbeat mechanism to prevent connection timeout
+
+```typescript
+// Heartbeat: periodically send SSE comments
+const HEARTBEAT_INTERVAL_MS = 15_000;
+let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+const startHeartbeat = () => {
+  stopHeartbeat();
+  heartbeatTimer = setInterval(() => {
+    try {
+      writer.write(encoder.encode(`:heartbeat\n\n`)).catch(() => stopHeartbeat());
+    } catch {
+      stopHeartbeat();
+    }
+  }, HEARTBEAT_INTERVAL_MS);
+};
+```
+
+### 3. Action Engine Pattern
+
+**File**: `/tmp/OpenMAIC/lib/action/engine.ts`
+
+**Key Pattern**: Unified execution layer with fire-and-forget vs synchronous actions
+
+```typescript
+class ActionEngine {
+  async execute(action: Action): Promise<void> {
+    // Auto-open whiteboard if a draw/clear/delete action is attempted
+    if (action.type.startsWith('wb_') && action.type !== 'wb_open' && action.type !== 'wb_close') {
+      await this.ensureWhiteboardOpen();
+    }
+
+    switch (action.type) {
+      case 'spotlight':
+        this.executeSpotlight(action); // Fire-and-forget
+        return;
+      case 'speech':
+        return this.executeSpeech(action); // Synchronous
+      // ...
+    }
+  }
+}
+```
+
+### 4. Zustand Store with IndexedDB
+
+**File**: `/tmp/OpenMAIC/lib/store/stage.ts`
+
+**Key Pattern**: Debounced auto-save with IndexedDB persistence
+
+```typescript
+// Debounced version of saveToStorage
+const debouncedSave = debounce(() => {
+  useStageStore.getState().saveToStorage();
+}, 500);
+
+// Save method
+saveToStorage: async () => {
+  const { stage, scenes, currentSceneId, chats } = get();
+  if (!stage?.id) return;
+  
+  try {
+    const { saveStageData } = await import('@/lib/utils/stage-storage');
+    await saveStageData(stage.id, { stage, scenes, currentSceneId, chats });
+  } catch (error) {
+    log.error('Failed to save to storage:', error);
+  }
+},
+```
+
+### 5. Roundtable UI Component
+
+**File**: `/tmp/OpenMAIC/components/roundtable/index.tsx`
+
+**Key Pattern**: Complex interactive UI with multiple states and animations
+
+```typescript
+// Audio indicator pattern
+const AudioIndicator = ({ state, agentId }: { state: AudioIndicatorState; agentId?: string }) => {
+  const bars = Array.from({ length: 8 }, (_, i) => (
+    <motion.div
+      key={i}
+      className="w-1 bg-current rounded-full"
+      animate={{
+        height: state === 'speaking' ? `${20 + Math.random() * 30}%` : '20%',
+      }}
+      transition={{ duration: 0.2, delay: i * 0.05 }}
+    />
+  ));
+  return <div className="flex items-end gap-0.5 h-6">{bars}</div>;
+};
+```
+
+### 6. Browser TTS with Chrome Bug Workaround
+
+**File**: `/tmp/OpenMAIC/lib/playback/engine.ts`
+
+**Key Pattern**: Sentence-level chunking to avoid Chrome's 15s cutoff
+
+```typescript
+private splitIntoChunks(text: string): string[] {
+  // Split on sentence-ending punctuation (Latin + CJK) and newlines
+  const chunks = text
+    .split(/(?<=[.!?。！？\n])\s*/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  return chunks.length > 0 ? chunks : [text];
+}
+
+private playBrowserTTSChunk(): Promise<void> {
+  if (this.browserTTSChunkIndex >= this.browserTTSChunks.length) {
+    // All chunks done
+    this.browserTTSActive = false;
+    this.callbacks.onSpeechEnd?.();
+    if (this.mode === 'playing') this.processNext();
+    return;
+  }
+  // ... play current chunk
+}
+```
+
+### 7. Prompt Template System
+
+**File**: `/tmp/OpenMAIC/lib/generation/prompts/`
+
+**Key Pattern**: Organized prompt templates with variable substitution
+
+```typescript
+// Template structure
+templates/slide-content/
+├── system.md
+└── user.md
+
+// System prompt example
+export const slideContentSystem = `You are an AI teaching assistant creating educational slides...
+
+## Slide Structure Guidelines
+- Title: Clear and concise
+- Content: 3-5 bullet points maximum
+- Visuals: Include relevant images/charts
+- Examples: Real-world applications
+
+## JSON Output Format
+{
+  "title": "string",
+  "content": {
+    "canvas": {
+      "elements": [
+        {
+          "id": "text_1",
+          "type": "text",
+          "content": "<p>...</p>"
+        }
+      ]
+    }
+  }
+}`;
+```
+
+## Integration Ideas for log-origin
+
+### 1. DMlog.ai Integration
+
+**Architecture Mapping**:
+```
+OpenMAIC Component → DMlog.ai Equivalent
+─────────────────────────────────────────
+StageStore → CampaignStore
+Scene → GameScene (combat/social/exploration)
+AgentRegistry → CharacterRegistry (PCs/NPCs)
+Director Graph → Initiative Tracker
+Whiteboard → Battle Map
+SlideRenderer → Scene Visualizer
+Roundtable → Game Chat Interface
+ActionEngine → Game Mechanics Engine
+```
+
+**Implementation Steps**:
+1. **Phase 1**: Port Zustand stores and IndexedDB persistence
+2. **Phase 2**: Adapt LangGraph director for initiative tracking
+3. **Phase 3**: Extend Whiteboard for battle maps with grid/tokens
+4. **Phase 4**: Create TTRPG-specific actions (roll_dice, apply_damage, etc.)
+5. **Phase 5**: Integrate character sheet management
+6. **Phase 6**: Add rule system integration (D&D 5e, Pathfinder, etc.)
+
+### 2. StudyLog.ai Integration
+
+**Architecture Mapping**:
+```
+OpenMAIC Component → StudyLog.ai Equivalent
+────────────────────────────────────────────
+Generation Pipeline → Study Material Generator
+Quiz System → Flashcard/Test System
+Interactive Scenes → Educational Simulations
+PBL System → Study Group Projects
+Roundtable → Study Group Discussion
+Whiteboard → Collaborative Note-taking
+SlideRenderer → Study Note Visualizer
+```
+
+**Implementation Steps**:
+1. **Phase 1**: Port slide generation for study notes
+2. **Phase 2**: Enhance quiz system with spaced repetition
+3. **Phase 3**: Create subject-specific templates (math, science, language)
+4. **Phase 4**: Add collaborative study rooms
+5. **Phase 5**: Integrate with existing educational resources
+6. **Phase 6**: Add progress tracking and analytics
+
+### 3. Shared Infrastructure
+
+**Core Services to Build**:
+1. **Multi-User Real-time System**: WebSocket/SSE for live collaboration
+2. **Media Generation Service**: Images/videos for both TTRPG and education
+3. **Voice Synthesis Service**: Character voices and narration
+4. **Rule Engine**: Game mechanics and educational content validation
+5. **Content Database**: Shared repository of scenes, characters, study materials
+
+**Technical Stack Decisions**:
+- **Frontend**: Keep React/Next.js for consistency
+- **State Management**: Zustand with IndexedDB (proven in OpenMAIC)
+- **Real-time**: SSE for streaming, consider WebSocket for bi-directional
+- **Backend**: Next.js API routes + separate microservices for heavy tasks
+- **Database**: PostgreSQL for relational data, Redis for caching
+- **Media**: Cloud storage (S3-compatible) with CDN
+
+## Risk Assessment
+
+### What's Complex (High Risk)
+
+1. **LangGraph Integration**:
+   - Learning curve for state machine design
+   - Debugging complex graph flows
+   - Performance optimization for real-time
+
+2. **Canvas-based Slide Renderer**:
+   - Complex SVG manipulation
+   - Performance with many elements
+   - Cross-browser compatibility issues
+
+3. **Multi-User Real-time Sync**:
+   - Conflict resolution
+   - Network latency handling
+   - Offline support and sync
+
+4. **Media Generation Pipeline**:
+   - Cost management (AI API calls)
+   - Quality control
+   - Fallback strategies
+
+### What's Moderate Risk
+
+1. **Zustand Store Architecture**:
+   - Well-documented pattern
+   - Proven in OpenMAIC
+   - Need careful design for TTRPG-specific state
+
+2. **Action Engine Pattern**:
+   - Clear separation of concerns
+   - Extensible for new action types
+   - Testing complexity
+
+3. **SSE Streaming**:
+   - Established pattern in OpenMAIC
+   - Heartbeat mechanism proven
+   - Need error handling improvements
+
+4. **Whiteboard Component**:
+   - SVG-based drawing works well
+   - Need extensions for TTRPG (grid, tokens)
+   - Performance with many elements
+
+### What's Easy (Low Risk)
+
+1. **Prompt Template System**:
+   - Simple file-based organization
+   - Easy to adapt for TTRPG/education
+   - Well-structured in OpenMAIC
+
+2. **Component Architecture**:
+   - Clear separation (ui, components, lib)
+   - Reusable patterns
+   - Good TypeScript support
+
+3. **Build/Deployment Setup**:
+   - pnpm workspace proven
+   - Vercel deployment straightforward
+   - Docker support available
+
+4. **Internationalization**:
+   - i18n hooks in place
+   - Easy to extend
+   - Chinese/English support
+
+### What's Not Worth Porting
+
+1. **PPT Export** (`packages/pptxgenjs`):
+   - TTRPG doesn't need PowerPoint export
+   - StudyLog might want PDF/HTML instead
+   - Heavy dependency with complex code
+
+2. **MathML to OMML Conversion** (`packages/mathml2omml`):
+   - Specific to Office integration
+   - Not needed for TTRPG
+   - StudyLog might need LaTeX instead
+
+3. **Some Media Providers**:
+   - China-specific providers (Doubao, Bailian)
+   - Expensive commercial providers
+   - Focus on open-source/affordable options
+
+4. **Legacy Code Paths**:
+   - Old Vercel AI SDK tool calls
+   - Deprecated session management
+   - Unused experimental features
+
+## Conclusion
+
+OpenMAIC provides a **goldmine of patterns and architectures** for log-origin's TTRPG and educational platforms. The key takeaways:
+
+### Strengths to Emulate:
+1. **Multi-Agent Orchestration**: LangGraph-based director system is perfect for TTRPG initiative tracking
+2. **Real-time Interactive UI**: Canvas-based rendering with live effects translates well to game visuals
+3. **Content Generation Pipeline**: Two-stage generation adaptable for both game scenes and study materials
+4. **State Management**: Robust Zustand + IndexedDB system for session persistence
+5. **Extensibility**: Plugin architecture for easy feature addition
+
+### Adaptation Strategy:
+1. **Start with Core Infrastructure**: Zustand stores, action engine, SSE streaming
+2. **Adapt LangGraph for TTRPG**: Director → Initiative tracker, agents → characters
+3. **Extend Whiteboard for Battle Maps**: Grid system, tokens, fog of war
+4. **Create Domain-Specific Actions**: TTRPG mechanics, educational interactions
+5. **Build on Proven Patterns**: Prompt templates, media generation, real-time updates
+
+### Recommended Implementation Order:
+1. **Phase 1**: Infrastructure (stores, API, basic UI)
+2. **Phase 2**: Core gameplay (character sheets, dice rolling, basic combat)
+3. **Phase 3**: Advanced features (battle maps, spell effects, rule integration)
+4. **Phase 4**: StudyLog adaptation (slide generation, quizzes, collaboration)
+5. **Phase 5**: Polish and optimization (performance, UX, mobile support)
+
+OpenMAIC demonstrates that **complex interactive AI systems are buildable** with modern web technologies. By adapting its patterns rather than copying wholesale, log-origin can create innovative platforms for both TTRPG gaming and interactive learning.
+
+---
+
+**File Count**: 500+ TypeScript/React files  
+**Total Lines**: ~50,000+ lines of code  
+**Key Insights**: 28+ action types, unified state machine, real-time SSE, extensible architecture  
+**Adaptation Potential**: Very high for both TTRPG and educational applications
