@@ -1,4 +1,4 @@
-name = "log-origin"
+name = "studylog-ai"
 main = "worker/index.ts"
 compatibility_date = "2025-03-01"
 compatibility_flags = ["nodejs_compat"]
@@ -8,17 +8,14 @@ directory = "./web"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "log-origin-db"
-database_id = "1d51f13d-fb6a-4eee-8f98-09a1222edea3"
+database_name = "studylog-db"
+database_id = ""
 
 [[kv_namespaces]]
 binding = "KV"
-id = "68b75858683b4c24905e3d5faa285d87"
+id = ""
 
 [vars]
 ENVIRONMENT = "production"
-
-# Secrets (set via wrangler secret put):
-# AUTH_HASH, DEEPSEEK_API_KEY, JWT_SECRET
-#
-# R2 bucket "log-origin-files" needs to be created via Dashboard first
+THEME = "study"
+DOMAIN = "education"
