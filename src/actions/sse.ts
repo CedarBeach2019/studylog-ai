@@ -22,7 +22,7 @@ export function encodeActionStart(action: Action): string {
   const data: SSEActionStartData = {
     id: action.meta?.id ?? genId(),
     type: action.type,
-    payload: action.payload as Record<string, unknown>,
+    payload: action.payload as unknown as Record<string, unknown>,
   };
   return encodeSSE('action_start', data);
 }

@@ -5,8 +5,12 @@ export interface Env {
   KV: KVNamespace;
   R2: R2Bucket;
   ENVIRONMENT: string;
+  THEME?: string;
+  DOMAIN?: string;
   JWT_SECRET: string;
   DEEPSEEK_API_KEY: string;
+  OPENAI_API_KEY?: string;
+  RATE_LIMIT?: string;
 }
 
 // ─── Hono Variables ────────────────────────────────────────────────────────
@@ -110,7 +114,7 @@ export interface AgentConfig {
 
 // ─── Routing types ─────────────────────────────────────────────────────────
 
-export type RoutingAction = 'cheap' | 'escalation' | 'compare' | 'draft' | 'local' | 'manual';
+export type RoutingAction = 'cheap' | 'escalation' | 'compare' | 'draft' | 'local' | 'manual' | 'summarize';
 
 export interface Classification {
   action: RoutingAction;

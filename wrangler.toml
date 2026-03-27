@@ -8,7 +8,7 @@ directory = "./web"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "studylog-db"
+database_name = "studylog-ai"
 database_id = ""
 
 [[kv_namespaces]]

@@ -123,6 +123,7 @@ export async function dehydrate(
     // Simple sequential counting per type within this batch
     const idx = finalMatches.filter(m => m.type === match.type).length;
     const entityId = `[${nextEntityId(match.type, currentCount + idx)}]`;
+    const rawId = nextEntityId(match.type, currentCount + idx);
 
     const adjustedStart = match.start + offset;
     const adjustedEnd = match.end + offset;
@@ -139,7 +140,7 @@ export async function dehydrate(
       entityId,
     });
 
-    // Upsert entity in D1
+    // Upsert entity in D1 (store raw ID without brackets)
     const now = new Date().toISOString();
     await db
       .prepare(
@@ -148,7 +149,7 @@ export async function dehydrate(
          ON CONFLICT(entity_id, user_id) DO UPDATE SET last_used_at = ?`,
       )
       .bind(
-        entityId,
+        rawId,
         userId,
         match.type,
         match.value,

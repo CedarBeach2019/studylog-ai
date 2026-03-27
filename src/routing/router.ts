@@ -10,7 +10,16 @@ interface StaticRule {
 }
 
 const STATIC_RULES: StaticRule[] = [
-  // 1. Code Generation
+  // 1. Combat/Attack — RPG, game, or action intent
+  {
+    name: 'combat_attack',
+    pattern:
+      /\b(attack|combat|fight|battle|slash|shoot|cast\s+spell|strike|hit|kill|smite|backstab|charge|ambush|fireball|swing|punch|kick)\b/i,
+    action: 'escalation',
+    confidence: 0.85,
+  },
+
+  // 2. Code Generation
   {
     name: 'code_generation',
     pattern:
@@ -19,7 +28,7 @@ const STATIC_RULES: StaticRule[] = [
     confidence: 0.85,
   },
 
-  // 2. Debug Request
+  // 3. Debug Request
   {
     name: 'debug_request',
     pattern:
@@ -28,16 +37,16 @@ const STATIC_RULES: StaticRule[] = [
     confidence: 0.85,
   },
 
-  // 3. Code Review
+  // 4. Code Review
   {
     name: 'code_review',
     pattern:
-      /\b(review|refactor|optimize|improve|clean up)\b.*\b(code|function|class|module)\b/i,
+      /\b(review|refactor|optimize|improve|clean\s+up)\b.*\b(code|function|class|module)\b/i,
     action: 'escalation',
     confidence: 0.8,
   },
 
-  // 4. Mathematical Reasoning
+  // 5. Mathematical Reasoning
   {
     name: 'math_reasoning',
     pattern:
@@ -46,16 +55,25 @@ const STATIC_RULES: StaticRule[] = [
     confidence: 0.9,
   },
 
-  // 5. Complex Analysis
+  // 6. Complex Analysis / Explanation — but not simple "how" in greetings
   {
     name: 'complex_analysis',
     pattern:
-      /\b(analyze|compare|evaluate|assess|critique|synthesize)\b/i,
+      /\b(analyze|compare|evaluate|assess|critique|synthesize|explain)\b/i,
     action: 'escalation',
     confidence: 0.7,
   },
 
-  // 6. Creative Writing
+  // 7. Question words (what/why/how) — but not standalone "what?" or "how?" in social context
+  {
+    name: 'question_words',
+    pattern:
+      /\b(what|why|how)\b.*\b(is|are|do|does|did|can|could|should|would|will|might)\b/i,
+    action: 'escalation',
+    confidence: 0.65,
+  },
+
+  // 7. Creative Writing
   {
     name: 'creative_writing',
     pattern:
@@ -64,7 +82,7 @@ const STATIC_RULES: StaticRule[] = [
     confidence: 0.75,
   },
 
-  // 7. Translation (cheap — small models handle this well)
+  // 8. Translation (cheap — small models handle this well)
   {
     name: 'translation',
     pattern:
@@ -73,42 +91,42 @@ const STATIC_RULES: StaticRule[] = [
     confidence: 0.8,
   },
 
-  // 8. Summarization
+  // 9. Summarization → summarize route
   {
     name: 'summarization',
     pattern:
-      /\b(summarize|summarise|tldr|tl;dr|brief|recap|outline|condense)\b/i,
-    action: 'cheap',
+      /\b(summarize|summarise|tldr|tl;dr|brief|recap|outline|condense|notes)\b/i,
+    action: 'summarize',
     confidence: 0.8,
   },
 
-  // 9. Simple Q&A
+  // 10. Simple Q&A
   {
     name: 'simple_qa',
     pattern:
-      /\b(what is|what are|who is|where is|when is|how do|how does|define|explain)\b/i,
-    action: 'cheap',
-    confidence: 0.6,
-  },
-
-  // 10. Factual Lookup
-  {
-    name: 'factual_lookup',
-    pattern: /^(what|who|where|when|how many|how much)\?/i,
-    action: 'cheap',
+      /\b(what is|what are|who is|where is|when is|how do|how does|define)\b/i,
+    action: 'escalation',
     confidence: 0.7,
   },
 
-  // 11. Chat/Social
+  // 11. Factual Lookup
+  {
+    name: 'factual_lookup',
+    pattern: /^(what|who|where|when|how many|how much)\?/i,
+    action: 'escalation',
+    confidence: 0.7,
+  },
+
+  // 12. Chat/Social — must be checked after combat/analysis rules
   {
     name: 'chat_social',
     pattern:
-      /\b(hello|hi|hey|thanks|thank you|bye|good morning|good night|how are you)\b/i,
+      /^(?:hi\b|hey\b|hello\b|thanks\b|thank you\b|bye\b|good morning\b|good night\b|how are you\b|what'?s up\b|sup\b|yo\b)/i,
     action: 'cheap',
     confidence: 0.9,
   },
 
-  // 12. List/Enumeration
+  // 13. List/Enumeration
   {
     name: 'list_enumeration',
     pattern:
@@ -117,7 +135,7 @@ const STATIC_RULES: StaticRule[] = [
     confidence: 0.7,
   },
 
-  // 13. Instruction Following
+  // 14. Instruction Following
   {
     name: 'instruction_following',
     pattern: /\b(set up|configure|install|deploy|how to)\b/i,
@@ -125,7 +143,7 @@ const STATIC_RULES: StaticRule[] = [
     confidence: 0.75,
   },
 
-  // 14. Privacy-Sensitive
+  // 15. Privacy-Sensitive
   {
     name: 'privacy_sensitive',
     pattern:
@@ -194,7 +212,7 @@ export function checkStaticRules(message: string): Classification | null {
 // ─── Default fallback ──────────────────────────────────────────────────────
 
 function defaultClassification(): Classification {
-  return { action: 'cheap', confidence: 0.3, reason: 'Default fallback' };
+  return { action: 'cheap', confidence: 0.3, reason: 'Default fallback (no rules matched)' };
 }
 
 // ─── Main classify function ────────────────────────────────────────────────

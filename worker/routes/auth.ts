@@ -4,6 +4,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables } from '../../src/types.js';
 import { sign } from '../../src/crypto/jwt.js';
+import { createGuestToken, checkGuestLimit, isGuest } from '../../src/middleware/guest.js';
 
 const auth = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -101,4 +102,19 @@ auth.post('/login', async (c) => {
 // POST /logout
 auth.post('/logout', (c) => c.json({ message: 'Logged out' }));
 
+// POST /guest — get a temporary guest token (no signup required)
+auth.post('/guest', async (c) => {
+  const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for') || 'unknown';
+  const jwtSecret = c.env.JWT_SECRET;
+  if (!jwtSecret) return c.json({ error: { type: 'server_error', code: 'config_error', message: 'JWT_SECRET not set' } }, 500);
+
+  const { token, state } = await createGuestToken(c.env.KV, ip, jwtSecret);
+  return c.json({
+    token,
+    guest: true,
+    messagesRemaining: state.maxMessages - state.messagesUsed,
+  });
+});
+
 export default auth;
+export { isGuest, checkGuestLimit };
