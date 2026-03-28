@@ -1,5 +1,5 @@
 import { html, useState, useEffect } from '../preact-shim.js';
-import { authState, addToast, getToken } from '../app.js';
+import { authState, analyticsOpen, addToast, getToken } from '../app.js';
 
 function OverviewTab({ summary }) {
   if (!summary) return html`<div class="analytics-empty">No data yet.</div>`;
@@ -90,11 +90,13 @@ function ActivityTab({ routes }) {
 }
 
 export function Analytics() {
-  const [open, setOpen] = useState(false);
   const [tab, setTab] = useState('overview');
   const [summary, setSummary] = useState(null);
   const [routes, setRoutes] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const open = analyticsOpen.value;
+  const setOpen = (v) => { analyticsOpen.value = v; };
 
   const fetchData = async () => {
     const token = getToken();

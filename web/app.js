@@ -24,7 +24,7 @@ export const analyticsOpen = signal(false);
 useEffect(() => {
   document.documentElement.setAttribute('data-theme', theme.value);
   localStorage.setItem('lo-theme', theme.value);
-  if (window.location.hostname.includes('dmlog')) {
+  if (window.location.hostname.includes('dmlog') || window.location.hostname.includes('studylog')) {
     const existing = document.getElementById('dm-theme-css');
     if (!existing) {
       const link = document.createElement('link');
