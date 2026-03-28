@@ -1,10 +1,10 @@
 /**
- * DMlog.ai custom configuration loader.
+ * StudyLog.ai custom configuration loader.
  * Loads personality, rules, theme, and templates from KV.
  */
 import type { Env } from '../../src/types';
 
-export interface DMLogConfig {
+export interface AppConfig {
   personality: string;
   rules: any;
   theme: string;
@@ -12,9 +12,9 @@ export interface DMLogConfig {
 }
 
 /**
- * Load DMlog.ai custom configuration from KV.
+ * Load StudyLog.ai custom configuration from KV.
  */
-export async function loadDMLogConfig(env: Env): Promise<DMLogConfig> {
+export async function loadAppConfig(env: Env): Promise<AppConfig> {
   try {
     const [personality, rulesRaw, theme] = await Promise.all([
       env.KV.get('config:personality') || '',
@@ -31,9 +31,9 @@ export async function loadDMLogConfig(env: Env): Promise<DMLogConfig> {
 
     // Load templates
     const templateKeys = [
-      'template:dnd_character', 'template:dnd_combat', 'template:dnd_npc',
-      'template:dnd_description', 'template:dnd_rules', 'template:dnd_loot',
-      'template:dnd_rest', 'template:dnd_social',
+      'template:study_plan', 'template:assignment', 'template:concept',
+      'template:flashcard', 'template:quiz', 'template:summary',
+      'template:explanation', 'template:research',
     ];
     const templates: Record<string, string> = {};
     const templateResults = await Promise.all(templateKeys.map(k => env.KV.get(k)));
@@ -44,32 +44,32 @@ export async function loadDMLogConfig(env: Env): Promise<DMLogConfig> {
 
     return { personality, rules, theme, templates };
   } catch (error) {
-    console.error('Failed to load DMlog config from KV:', error);
+    console.error('Failed to load StudyLog config from KV:', error);
     return getDefaultConfig();
   }
 }
 
 /**
- * Get the default system prompt for DMlog.ai.
+ * Get the default system prompt for StudyLog.ai.
  */
 export async function getSystemPrompt(env: Env): Promise<string> {
-  const config = await loadDMLogConfig(env);
+  const config = await loadAppConfig(env);
   return config.personality || getDefaultConfig().personality;
 }
 
 /**
- * Get routing rules for DMlog.ai commands.
+ * Get routing rules for StudyLog.ai commands.
  */
 export async function getRoutingRules(env: Env): Promise<any[]> {
-  const config = await loadDMLogConfig(env);
+  const config = await loadAppConfig(env);
   return config.rules;
 }
 
 /**
- * Get theme CSS for DMlog.ai.
+ * Get theme CSS for StudyLog.ai.
  */
 export async function getThemeCSS(env: Env): Promise<string> {
-  const config = await loadDMLogConfig(env);
+  const config = await loadAppConfig(env);
   return config.theme;
 }
 
@@ -84,19 +84,19 @@ export async function getTemplate(key: string, env: Env): Promise<string | null>
 /**
  * Default fallback configuration.
  */
-function getDefaultConfig(): DMLogConfig {
+function getDefaultConfig(): AppConfig {
   return {
-    personality: `# DMlog.ai System Prompt
+    personality: `# StudyLog.ai System Prompt
 
-You are DMlog.ai — an experienced Dungeon Master assistant for D&D 5e. 
-Help with character creation, combat tracking, rules lookups, and immersive descriptions. 
-Be theatrical but clear, rules-aware but flexible. Remember campaign context via the LOG.`,
+You are StudyLog.ai — an intelligent study companion and educational assistant.
+Help with learning planning, concept explanation, assignment guidance, flashcard creation, and knowledge retention.
+Be encouraging but thorough, pedagogically sound but flexible. Remember learning context via the LOG.`,
     rules: [],
-    theme: `/* DMlog.ai Theme - Fallback */
-body.dm-theme {
-  background-color: #1a0f0a;
-  color: #f5f1e6;
-  font-family: 'Crimson Text', serif;
+    theme: `/* StudyLog.ai Theme - Fallback */
+body.study-theme {
+  background-color: #f8f9fa;
+  color: #212529;
+  font-family: 'Inter', system-ui, sans-serif;
 }`,
     templates: {}
   };

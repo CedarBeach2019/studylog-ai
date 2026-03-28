@@ -9,7 +9,7 @@ import { classify } from '../../src/routing/router.js';
 import { chatStream, chat, ProviderError } from '../../src/providers/openai-compatible.js';
 import { sign, verify } from '../../src/crypto/jwt.js';
 import { isGuest, checkGuestLimit } from '../../src/middleware/guest.js';
-import { getSystemPrompt } from '../dmlog-config.js';
+import { getSystemPrompt } from '../app-config.js';
 
 const chatApp = new Hono<{ Bindings: Env; Variables: Variables }>();
 
