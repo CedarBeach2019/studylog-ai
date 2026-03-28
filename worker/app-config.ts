@@ -39,7 +39,7 @@ export async function loadAppConfig(env: Env): Promise<AppConfig> {
     const templateResults = await Promise.all(templateKeys.map(k => env.KV.get(k)));
     for (let i = 0; i < templateKeys.length; i++) {
       const key = templateKeys[i].replace('template:', '');
-      if (templateResults[i]) templates[key] = templateResults[i];
+      if (templateResults[i]) templates[key] = templateResults[i]!;
     }
 
     return { personality, rules, theme, templates };

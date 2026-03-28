@@ -49,7 +49,7 @@ export function Settings() {
 
   const tabs = [
     { id: 'providers', label: '🤖 Models', icon: '🤖' },
-    { id: 'preferences', label: '⚙️ Play', icon: '⚙️' },
+    { id: 'preferences', label: '⚙️ Preferences', icon: '⚙️' },
     { id: 'about', label: 'ℹ️ About', icon: 'ℹ️' },
   ];
 
@@ -71,7 +71,7 @@ export function Settings() {
         ${tab === 'providers' && html`
           <div class="settings-section">
             <h3>Active AI Models</h3>
-            <p class="settings-desc">The DM uses these models to narrate your adventure. Models are automatically selected based on your query type.</p>
+            <p class="settings-desc">Your AI tutor uses these models to help with learning. Models are automatically selected based on your query type.</p>
             ${providers.map(p => html`
               <div class="provider-item">
                 <div>
@@ -84,17 +84,17 @@ export function Settings() {
               </div>
             `)}
             <div class="settings-note">
-              💡 The routing engine picks the best model for each scene — combat, exploration, dialogue, and roleplay.
+              💡 The routing engine picks the best model for each task — explanations, practice problems, study planning, and concept review.
             </div>
           </div>
         `}
         ${tab === 'preferences' && html`
           <div class="settings-section">
-            <h3>Gameplay</h3>
+            <h3>Learning Preferences</h3>
             <div class="toggle-row">
               <div>
                 <div>Stream responses</div>
-                <div class="toggle-desc">See the narration appear word by word</div>
+                <div class="toggle-desc">See explanations appear word by word</div>
               </div>
               <button class="toggle ${streaming ? 'on' : ''}" onclick=${() => { const v = !streaming; setStreaming(v); savePrefs({ streaming: v }); }}></button>
             </div>
@@ -129,12 +129,12 @@ export function Settings() {
         `}
         ${tab === 'about' && html`
           <div class="settings-section">
-            <h3>DMlog.ai</h3>
+            <h3>StudyLog.ai</h3>
             <p class="settings-desc">
-              Your AI Dungeon Master remembers everything. Every NPC, every plot thread, every epic moment — stored securely and used to make each session better.
+              Your AI study companion remembers everything. Every concept, every practice problem, every breakthrough moment — stored securely and used to make each study session better.
             </p>
             <div class="about-links">
-              <a href="https://github.com/CedarBeach2019/dmlog-ai" target="_blank" rel="noopener">📖 Source Code</a>
+              <a href="https://github.com/CedarBeach2019/studylog-ai" target="_blank" rel="noopener">📖 Source Code</a>
               <a href="https://github.com/CedarBeach2019/log-origin" target="_blank" rel="noopener">🔧 Core Engine (log-origin)</a>
             </div>
           </div>
