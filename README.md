@@ -1,18 +1,65 @@
-# log-origin
+# studylog-ai
 
-> Privacy-first, self-improving AI gateway. Cloudflare-native, forkable, embeddable.
+> AI-powered study companion with spaced repetition, flashcards, knowledge mapping, and Pomodoro focus. Privacy-first, open source, Cloudflare-native.
 
 ## What Is This
 
-log-origin is the white-label core that powers [LOG.ai](https://github.com/CedarBeach2019/log-origin) — a platform of themed AI gateways (studylog.ai, makerlog.ai, DMlog.ai, etc.). It's also a standalone library you can embed in your own applications.
+studylog-ai is the learning-focused themed fork of [log-origin](https://github.com/CedarBeach2019/log-origin) — a privacy-first AI gateway platform. It adds a full study toolkit on top of the core AI routing engine.
 
-**The core idea:** Every interaction builds a log. The log trains the routing. The routing gets better. Your AI has a memory.
+**Core features:**
+- **Pomodoro Timer** — Focus sessions with configurable work/break intervals
+- **Flashcards** — SM-2 spaced repetition engine with Anki-style scheduling
+- **Knowledge Map** — Visual concept graph tracking mastery across topics
+- **Progress Dashboard** — Points, streaks, accuracy, and goal tracking
+- **AI Tutor** — Socratic method, adaptive quizzes, weakness detection
+- **Session Management** — Multi-phase study sessions (setup, lecture, practice, quiz, review, summary)
+
+## Architecture
+
+```
+src/study/
+  tracker.ts    — StudySession, SpacedRepetition, FlashCardEngine, KnowledgeGraph, StudyGoals
+  tutor.ts      — SocraticMethod, ExplanationGenerator, QuizGenerator, WeaknessDetector
+
+src/orchestrator/
+  session-state.ts  — SM-2 algorithm, study phases, session state
+  director.ts       — Agent routing (teacher, tutor, quiz master, classmate)
+  agents.ts         — Agent definitions
+
+worker/
+  index.ts          — Hono app entry point
+  routes/study.ts   — /api/study/*, /api/flashcards, /api/progress, /api/quiz
+
+web/
+  index.html        — Study UI dashboard (navy #1E3A5F + gold #F59E0B theme)
+  study.css         — Study component styles
+  components/       — Preact components (StudyShell, Flashcard, QuizCard, etc.)
+```
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/study/start` | Start a new study session |
+| POST | `/api/study/turn` | Send a message in active session |
+| GET | `/api/study/session/:id` | Get session state |
+| POST | `/api/study/quiz` | Submit quiz answer |
+| POST | `/api/study/flashcards` | Add flashcards to session |
+| POST | `/api/study/flashcard/review` | Rate a flashcard (SM-2) |
+| GET | `/api/flashcards` | Get due flashcards |
+| POST | `/api/flashcards/create` | Create a new flashcard |
+| GET | `/api/progress` | Get aggregated progress |
+| GET | `/api/quiz` | Generate a quiz |
+| POST | `/api/quiz/submit` | Submit quiz answers |
+| GET | `/api/study/knowledge-map` | Get knowledge graph nodes |
+| POST | `/api/study/knowledge-map/node` | Add a knowledge node |
+| GET | `/api/study/goals` | Get active/completed goals |
+| POST | `/api/study/goals` | Create a study goal |
+| GET | `/api/study/stream` | SSE stream for live sessions |
 
 ## Status
 
-🔄 **Architecture Phase** — We're writing the design documents before writing any code. Every table, endpoint, component, threat model, and tradeoff is debated and documented.
-
-See `docs/` for the complete design blueprint.
+🚧 **Active Development** — Study vessel is in progress. Core tracking, tutoring engines, and UI are functional.
 
 ## Design Documents
 

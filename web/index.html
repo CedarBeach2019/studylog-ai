@@ -1,34 +1,652 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="study">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>DMlog.ai — Your AI Dungeon Master Remembers Everything</title>
-  <meta name="description" content="AI-powered D&D dungeon master with persistent memory. Your DM remembers every NPC, plot thread, and epic moment. Free, open source, encrypted.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏰</text></svg>">
-  <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <title>StudyLog.ai — AI Tutor That Remembers What You Learn</title>
+  <meta name="description" content="AI-powered study companion with spaced repetition, flashcards, knowledge mapping, and Pomodoro focus. Free, open source, encrypted.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+  <meta name="theme-color" content="#1E3A5F">
   <link rel="stylesheet" href="/style.css">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/study.css">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://esm.sh; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.deepseek.com https://api.openai.com; img-src 'self' data:;">
+  <style>
+    /* ─── StudyLog Navy + Gold Theme ─────────────────────────── */
+    :root {
+      --navy: #1E3A5F;
+      --navy-light: #2A4F7A;
+      --navy-dark: #142942;
+      --gold: #F59E0B;
+      --gold-light: #FBBF24;
+      --gold-dark: #D97706;
+      --bg: #F0F4F8;
+      --card: #FFFFFF;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --green: #16A34A;
+      --red: #DC2626;
+      --border: #E2E8F0;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    body { margin:0; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color: var(--text); }
+
+    /* ─── Dashboard Layout ─────────────────────────────────── */
+    .dashboard { display: flex; height: 100vh; }
+
+    .dash-nav {
+      width: 64px;
+      background: var(--navy-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 16px;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .dash-nav-btn {
+      width: 44px; height: 44px;
+      border: none; border-radius: 10px;
+      background: transparent;
+      color: rgba(255,255,255,0.6);
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dash-nav-btn:hover { background: var(--navy-light); color: white; }
+    .dash-nav-btn.active { background: var(--navy); color: var(--gold); box-shadow: inset 3px 0 0 var(--gold); }
+
+    .dash-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .dash-header {
+      height: 56px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .dash-header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0;
+    }
+
+    .dash-header .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .dash-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    /* ─── Tab Panels ───────────────────────────────────────── */
+    .tab-panel { display: none; height: 100%; }
+    .tab-panel.active { display: flex; flex-direction: column; }
+
+    /* ─── Pomodoro Timer ───────────────────────────────────── */
+    .pomodoro-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+    }
+
+    .pomodoro-ring {
+      width: 260px; height: 260px;
+      border-radius: 50%;
+      border: 8px solid var(--border);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    .pomodoro-ring.running { border-color: var(--navy); box-shadow: 0 0 0 6px rgba(30,58,95,0.15); }
+    .pomodoro-ring.break-mode { border-color: var(--green); box-shadow: 0 0 0 6px rgba(22,163,74,0.15); }
+
+    .pomodoro-time {
+      font-size: 52px;
+      font-weight: 700;
+      color: var(--navy);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pomodoro-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .pomodoro-controls {
+      display: flex;
+      gap: 12px;
+    }
+
+    .pomo-btn {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .pomo-btn-start { background: var(--navy); color: white; }
+    .pomo-btn-start:hover { background: var(--navy-light); }
+    .pomo-btn-pause { background: var(--gold); color: var(--navy-dark); }
+    .pomo-btn-pause:hover { background: var(--gold-light); }
+    .pomo-btn-reset { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .pomo-btn-reset:hover { background: var(--border); }
+
+    .pomodoro-stats {
+      display: flex;
+      gap: 24px;
+      margin-top: 24px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .pomodoro-stats strong { color: var(--gold); font-size: 20px; display: block; }
+
+    /* ─── Flashcards Panel ─────────────────────────────────── */
+    .flashcards-panel { display: flex; flex-direction: column; align-items: center; padding-top: 24px; }
+
+    .fc-stats {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 24px;
+      font-size: 13px;
+    }
+
+    .fc-stat {
+      padding: 8px 16px;
+      border-radius: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      font-weight: 600;
+    }
+    .fc-stat.due { color: var(--red); border-color: var(--red); }
+    .fc-stat.new { color: var(--navy); border-color: var(--navy); }
+    .fc-stat.learning { color: var(--gold-dark); border-color: var(--gold); }
+    .fc-stat.review { color: var(--green); border-color: var(--green); }
+
+    /* ─── Knowledge Map ────────────────────────────────────── */
+    .knowledge-map-panel { padding: 24px; }
+
+    .km-graph {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      min-height: 400px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .km-node {
+      position: absolute;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: var(--navy);
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      min-width: 100px;
+    }
+    .km-node:hover { transform: scale(1.05); box-shadow: var(--shadow); }
+    .km-node.mastered { background: var(--green); }
+    .km-node.in-progress { background: var(--gold-dark); }
+    .km-node.weak { background: var(--red); }
+
+    .km-stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .km-stat-card {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+    .km-stat-card .num { font-size: 28px; font-weight: 700; color: var(--navy); }
+    .km-stat-card .lbl { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+    /* ─── Progress Dashboard ───────────────────────────────── */
+    .progress-panel { padding: 24px; }
+
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .progress-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .progress-card h3 {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 0 0 12px 0;
+    }
+
+    .progress-bar-track {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    .progress-bar-fill.navy { background: var(--navy); }
+    .progress-bar-fill.gold { background: var(--gold); }
+    .progress-bar-fill.green { background: var(--green); }
+
+    .big-number { font-size: 36px; font-weight: 700; color: var(--navy); }
+    .big-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+    .streak-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    /* ─── Study Session Chat ───────────────────────────────── */
+    .session-panel { display: flex; flex-direction: column; height: 100%; }
+    .session-panel .study-shell { flex: 1; }
+
+    /* ─── Responsive ───────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .dash-nav { width: 52px; }
+      .dash-nav-btn { width: 38px; height: 38px; font-size: 17px; }
+      .dash-body { padding: 16px; }
+      .progress-grid { grid-template-columns: 1fr; }
+      .pomodoro-ring { width: 200px; height: 200px; }
+      .pomodoro-time { font-size: 40px; }
+      .km-stats-row { flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
   <div id="app">
-    <div style="display:flex;align-items:center;justify-content:center;height:100vh;color:var(--t2, #8b949e);font-family:system-ui">
-      Loading...
+    <!-- Dashboard shell — Preact renders into here -->
+    <div style="display:flex;align-items:center;justify-content:center;height:100vh;color:var(--text-muted);font-family:system-ui">
+      Loading StudyLog.ai...
     </div>
   </div>
+
   <script type="module">
     window.onerror = (msg, src, line, col, err) => {
       const el = document.getElementById('app');
-      if (el) el.innerHTML = '<div style="padding:2rem;color:#f85149;font-family:monospace;white-space:pre-wrap"><div style="font-size:1.2rem;margin-bottom:1rem">⚠️ Error</div><div>' + msg + '</div>' + (src ? '<div style="color:#8b949e;margin-top:.5rem">' + src + ':' + line + ':' + col + '</div>' : '') + '</div>';
+      if (el) el.innerHTML = '<div style="padding:2rem;color:var(--red);font-family:monospace;white-space:pre-wrap"><div style="font-size:1.2rem;margin-bottom:1rem">Error</div><div>' + msg + '</div>' + (src ? '<div style="color:var(--text-muted);margin-top:.5rem">' + src + ':' + line + ':' + col + '</div>' : '') + '</div>';
     };
     try {
-      const { render } = await import('./preact-shim.js');
-      const { App } = await import('./app.js');
-      render(App(), document.getElementById('app'));
+      const { render, h, Component } = await import('./preact-shim.js');
+      const { html } = await import('https://esm.sh/htm@3.1.1/preact?module');
+      const { StudyShell } = await import('./components/study-shell.js');
+
+      // ─── In-memory state ──────────────────────────────────
+      const state = {
+        tab: 'pomodoro',
+        sessionId: null,
+        session: null,
+        actions: [],
+        pomodoro: { remaining: 25*60, running: false, isBreak: false, completed: 0 },
+        flashcards: [],
+        fcIndex: 0,
+        progress: { totalPoints: 0, streak: 0, accuracy: 0, cardsReviewed: 0, sessionsCompleted: 3, totalTimeMin: 127 },
+        knowledgeNodes: [],
+        timer: null,
+      };
+
+      // ─── Pomodoro Timer ───────────────────────────────────
+      function startPomoTimer() {
+        if (state.timer) clearInterval(state.timer);
+        state.pomodoro.running = true;
+        renderApp();
+        state.timer = setInterval(() => {
+          if (state.pomodoro.remaining <= 0) {
+            if (state.pomodoro.isBreak) {
+              state.pomodoro.isBreak = false;
+              state.pomodoro.remaining = 25 * 60;
+            } else {
+              state.pomodoro.completed++;
+              state.pomodoro.isBreak = true;
+              state.pomodoro.remaining = 5 * 60;
+            }
+            state.pomodoro.running = false;
+            clearInterval(state.timer);
+            state.timer = null;
+          } else {
+            state.pomodoro.remaining--;
+          }
+          renderApp();
+        }, 1000);
+      }
+
+      function pausePomo() {
+        state.pomodoro.running = false;
+        if (state.timer) { clearInterval(state.timer); state.timer = null; }
+        renderApp();
+      }
+
+      function resetPomo() {
+        pausePomo();
+        state.pomodoro.remaining = 25 * 60;
+        state.pomodoro.isBreak = false;
+        renderApp();
+      }
+
+      function fmtTime(s) {
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+      }
+
+      // ─── Flashcard helpers ────────────────────────────────
+      function loadSampleFlashcards() {
+        state.flashcards = [
+          { id:'fc1', front:'What is spaced repetition?', back:'A learning technique where review sessions are scheduled at increasing intervals based on difficulty.', tags:['learning'], deck:'default' },
+          { id:'fc2', front:'What does SM-2 stand for?', back:'SuperMemo 2 — the spaced repetition algorithm created by Piotr Wozniak in 1987.', tags:['algorithm'], deck:'default' },
+          { id:'fc3', front:'What is the Ebbinghaus forgetting curve?', back:'A mathematical formula describing the rate at which information is forgotten over time without review.', tags:['psychology'], deck:'default' },
+          { id:'fc4', front:'What is active recall?', back:'A study method where you actively stimulate memory during learning, rather than passively re-reading material.', tags:['learning'], deck:'default' },
+        ];
+        state.fcIndex = 0;
+      }
+      loadSampleFlashcards();
+
+      // ─── Knowledge Map Sample ─────────────────────────────
+      state.knowledgeNodes = [
+        { id:'n1', label:'Spaced Repetition', mastery:0.85, x:200, y:80 },
+        { id:'n2', label:'Active Recall', mastery:0.7, x:380, y:60 },
+        { id:'n3', label:'Forgetting Curve', mastery:0.5, x:300, y:200 },
+        { id:'n4', label:'SM-2 Algorithm', mastery:0.3, x:140, y:220 },
+        { id:'n5', label:'Interleaving', mastery:0.6, x:460, y:190 },
+        { id:'n6', label:'Elaborative Encoding', mastery:0.15, x:520, y:310 },
+      ];
+
+      // ─── Tab switcher ─────────────────────────────────────
+      function setTab(tab) { state.tab = tab; renderApp(); }
+
+      // ─── Study session start ──────────────────────────────
+      async function startSession(topic) {
+        try {
+          const res = await fetch('/api/study/start', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ topic }),
+          });
+          const data = await res.json();
+          state.sessionId = data.sessionId;
+          state.session = { phase: data.phase, topic: data.topic, objectives: data.objectives || [], turnNumber: 0 };
+          state.actions = [{ type:'narration', payload:{ text:`Session started! Let's study **${topic}**.` } }];
+          state.tab = 'session';
+          renderApp();
+        } catch(err) {
+          state.actions = [{ type:'narration', payload:{ text:`Error: ${err.message}` } }];
+          renderApp();
+        }
+      }
+
+      // ─── Main App Component ───────────────────────────────
+      function App() {
+        const { tab, pomodoro, flashcards, fcIndex, progress, knowledgeNodes } = state;
+
+        const tabs = [
+          { id:'pomodoro', icon:'\u23F1', label:'Focus' },
+          { id:'flashcards', icon:'\uD83D\uDCC7', label:'Cards' },
+          { id:'knowledge', icon:'\uD83D\uDDFA', label:'Map' },
+          { id:'progress', icon:'\uD83D\uDCC8', label:'Progress' },
+          { id:'session', icon:'\uD83D\uDCDD', label:'Study' },
+        ];
+
+        return html`<div class="dashboard">
+          <nav class="dash-nav">
+            ${tabs.map(t => html`
+              <button key=${t.id} class="dash-nav-btn ${tab === t.id ? 'active' : ''}"
+                title=${t.label}
+                onClick=${() => setTab(t.id)}>${t.icon}</button>
+            `)}
+          </nav>
+
+          <div class="dash-main">
+            <div class="dash-header">
+              <h1>StudyLog.ai</h1>
+              <div class="header-right">
+                <span class="streak-badge">\uD83D\uDD25 ${progress.streak}</span>
+                <span>${progress.totalPoints} pts</span>
+              </div>
+            </div>
+
+            <div class="dash-body">
+              <!-- Pomodoro Tab -->
+              <div class="tab-panel ${tab === 'pomodoro' ? 'active' : ''}" style="align-items:center">
+                <div class="pomodoro-container">
+                  <div class="pomodoro-ring ${pomodoro.running ? 'running' : ''} ${pomodoro.isBreak ? 'break-mode' : ''}">
+                    <div style="text-align:center">
+                      <div class="pomodoro-time">${fmtTime(pomodoro.remaining)}</div>
+                      <div class="pomodoro-label">${pomodoro.isBreak ? 'Break' : pomodoro.running ? 'Focus' : 'Ready'}</div>
+                    </div>
+                  </div>
+                  <div class="pomodoro-controls">
+                    ${!pomodoro.running ? html`
+                      <button class="pomo-btn pomo-btn-start" onClick=${startPomoTimer}>${pomodoro.remaining < 25*60 ? 'Resume' : 'Start Focus'}</button>
+                    ` : html`
+                      <button class="pomo-btn pomo-btn-pause" onClick=${pausePomo}>Pause</button>
+                    `}
+                    <button class="pomo-btn pomo-btn-reset" onClick=${resetPomo}>Reset</button>
+                  </div>
+                  <div class="pomodoro-stats">
+                    <div><strong>${pomodoro.completed}</strong>Completed</div>
+                    <div><strong>${progress.totalTimeMin}</strong>Minutes Today</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Flashcards Tab -->
+              <div class="tab-panel ${tab === 'flashcards' ? 'active' : ''} flashcards-panel">
+                <div class="fc-stats">
+                  <span class="fc-stat due">${flashcards.length} Due</span>
+                  <span class="fc-stat new">0 New</span>
+                  <span class="fc-stat learning">2 Learning</span>
+                  <span class="fc-stat review">${Math.max(0, flashcards.length - 2)} Review</span>
+                </div>
+                ${flashcards.length > 0 ? html`
+                  <div class="flashcard-wrapper">
+                    <${FlashcardCard} card=${flashcards[fcIndex % flashcards.length]}
+                      index=${fcIndex} total=${flashcards.length}
+                      onRate=${(rating) => {
+                        fetch('/api/study/flashcard/review', {
+                          method:'POST',
+                          headers:{'Content-Type':'application/json'},
+                          body: JSON.stringify({ sessionId: state.sessionId || 'demo', cardId: flashcards[fcIndex % flashcards.length].id, rating }),
+                        }).catch(() => {});
+                        state.fcIndex++;
+                        state.progress.cardsReviewed++;
+                        renderApp();
+                      }} />
+                  </div>
+                ` : html`<p style="color:var(--text-muted)">No flashcards due. Great job!</p>`}
+              </div>
+
+              <!-- Knowledge Map Tab -->
+              <div class="tab-panel ${tab === 'knowledge' ? 'active' : ''} knowledge-map-panel">
+                <div class="km-stats-row">
+                  <div class="km-stat-card"><div class="num">${knowledgeNodes.length}</div><div class="lbl">Concepts</div></div>
+                  <div class="km-stat-card"><div class="num" style="color:var(--green)">${knowledgeNodes.filter(n=>n.mastery>=0.8).length}</div><div class="lbl">Mastered</div></div>
+                  <div class="km-stat-card"><div class="num" style="color:var(--gold-dark)">${knowledgeNodes.filter(n=>n.mastery>0&&n.mastery<0.8).length}</div><div class="lbl">In Progress</div></div>
+                  <div class="km-stat-card"><div class="num" style="color:var(--red)">${knowledgeNodes.filter(n=>n.mastery<0.3).length}</div><div class="lbl">Weak</div></div>
+                </div>
+                <div class="km-graph">
+                  ${knowledgeNodes.map(n => html`
+                    <div key=${n.id} class="km-node ${n.mastery >= 0.8 ? 'mastered' : n.mastery >= 0.3 ? 'in-progress' : 'weak'}"
+                      style=${{ left: n.x + 'px', top: n.y + 'px' }}>
+                      ${n.label}<br/>
+                      <span style="font-size:11px;font-weight:400;opacity:0.8">${Math.round(n.mastery * 100)}%</span>
+                    </div>
+                  `)}
+                </div>
+              </div>
+
+              <!-- Progress Tab -->
+              <div class="tab-panel ${tab === 'progress' ? 'active' : ''} progress-panel">
+                <div class="progress-grid">
+                  <div class="progress-card">
+                    <h3>Total Points</h3>
+                    <div class="big-number">${progress.totalPoints}</div>
+                    <div class="big-label">earned this week</div>
+                  </div>
+                  <div class="progress-card">
+                    <h3>Accuracy</h3>
+                    <div class="big-number">${Math.round(progress.accuracy * 100)}%</div>
+                    <div class="big-label">across all quizzes</div>
+                  </div>
+                  <div class="progress-card">
+                    <h3>Study Streak</h3>
+                    <div class="streak-badge" style="font-size:24px">\uD83D\uDD25 ${progress.streak} days</div>
+                  </div>
+                  <div class="progress-card">
+                    <h3>Cards Reviewed</h3>
+                    <div class="big-number">${progress.cardsReviewed}</div>
+                    <div class="big-label">total reviews</div>
+                  </div>
+                  <div class="progress-card">
+                    <h3>Sessions</h3>
+                    <div class="big-number">${progress.sessionsCompleted}</div>
+                    <div class="big-label">completed</div>
+                  </div>
+                  <div class="progress-card">
+                    <h3>Mastery Progress</h3>
+                    <div style="margin-top:8px">
+                      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                        <span>Overall</span><span style="font-weight:600;color:var(--navy)">62%</span>
+                      </div>
+                      <div class="progress-bar-track"><div class="progress-bar-fill navy" style="width:62%"></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Study Session Tab -->
+              <div class="tab-panel ${tab === 'session' ? 'active' : ''} session-panel">
+                ${!state.sessionId ? html`
+                  <div style="display:flex;align-items:center;justify-content:center;flex:1">
+                    <div style="text-align:center;max-width:500px;padding:32px">
+                      <h2 style="font-size:28px;color:var(--navy);margin-bottom:8px">Start a Study Session</h2>
+                      <p style="color:var(--text-muted);margin-bottom:32px">What would you like to learn?</p>
+                      <div style="display:flex;gap:8px">
+                        <input id="topic-input" type="text" placeholder="Enter a topic..."
+                          style="flex:1;padding:12px 16px;border:2px solid var(--border);border-radius:8px;font-size:16px;outline:none"
+                          onKeyDown=${e => e.key === 'Enter' && startSession(e.target.value)} />
+                        <button class="pomo-btn pomo-btn-start" style="padding:12px 24px"
+                          onClick=${() => {
+                            const input = document.getElementById('topic-input');
+                            if (input?.value) startSession(input.value);
+                          }}>Start</button>
+                      </div>
+                    </div>
+                  </div>
+                ` : html`
+                  <${StudyShell}
+                    session=${state.session}
+                    actions=${state.actions}
+                    onSend=${async (message) => {
+                      try {
+                        const res = await fetch('/api/study/turn', {
+                          method:'POST',
+                          headers:{'Content-Type':'application/json'},
+                          body: JSON.stringify({ sessionId: state.sessionId, message }),
+                        });
+                        const data = await res.json();
+                        state.actions = [...state.actions,
+                          { type:'speech', payload:{ character:'You', text:message } },
+                          { type:'narration', payload:{ text:`**[${data.agentId}]** ${data.instructions}` } },
+                        ];
+                        state.session = { ...state.session, phase: data.phase, turnNumber: data.turnNumber };
+                        renderApp();
+                      } catch(err) {
+                        state.actions = [...state.actions, { type:'narration', payload:{ text:`Error: ${err.message}` } }];
+                        renderApp();
+                      }
+                    }}
+                    quizAnswer=${() => {}}
+                    flashcardRate=${() => {}}
+                  />
+                `}
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      // ─── Flashcard flipper component ──────────────────────
+      function FlashcardCard({ card, index, total, onRate }) {
+        const flipped = { value: false };
+        const toggle = () => { flipped.value = !flipped.value; renderApp(); };
+        return html`<div>
+          <div class="flashcard" onClick=${toggle} class="${flipped.value ? 'flipped' : ''}">
+            <div class="flashcard-face flashcard-front">${card.front}</div>
+            <div class="flashcard-face flashcard-back">${card.back}</div>
+          </div>
+          <div class="flashcard-counter">${index + 1} / ${total}</div>
+          <div class="flashcard-rating ${flipped.value ? 'visible' : ''}">
+            <button class="rating-btn again" onClick=${() => onRate(0)}>Again</button>
+            <button class="rating-btn hard" onClick=${() => onRate(1)}>Hard</button>
+            <button class="rating-btn good" onClick=${() => onRate(3)}>Good</button>
+            <button class="rating-btn easy" onClick=${() => onRate(5)}>Easy</button>
+          </div>
+        </div>`;
+      }
+
+      // ─── Render loop ──────────────────────────────────────
+      function renderApp() { render(html`<${App} />`, document.getElementById('app')); }
+      renderApp();
+
     } catch (e) {
-      document.getElementById('app').innerHTML = '<div style="padding:2rem;color:#f85149;font-family:monospace;white-space:pre-wrap"><div style="font-size:1.2rem;margin-bottom:1rem">⚠️ Load Error</div><div>' + e.message + '</div><div style="color:#8b949e;margin-top:1rem">Check browser console (F12) for details.</div></div>';
+      document.getElementById('app').innerHTML = '<div style="padding:2rem;color:var(--red);font-family:monospace;white-space:pre-wrap"><div style="font-size:1.2rem;margin-bottom:1rem">Load Error</div><div>' + e.message + '</div><div style="color:var(--text-muted);margin-top:1rem">Check browser console (F12).</div></div>';
       console.error('Module load error:', e);
     }
   </script>

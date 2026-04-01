@@ -9,6 +9,14 @@ import {
   type StudySessionState, type QuizResult,
 } from '../../src/orchestrator/session-state.js';
 import { routeToAgent } from '../../src/orchestrator/director.js';
+import {
+  StudySession, SpacedRepetition, FlashCardEngine, KnowledgeGraph, StudyGoals,
+  type FlashCardData, type PomodoroState,
+} from '../../src/study/tracker.js';
+import {
+  SocraticMethod, QuizGenerator, WeaknessDetector,
+  type QuizQuestion, type AnswerRecord,
+} from '../../src/study/tutor.js';
 
 type Bindings = { DB?: D1Database; KV?: KVNamespace };
 
@@ -17,6 +25,14 @@ app.use('*', cors());
 
 // In-memory session store (replace with D1/KV in production)
 const sessions = new Map<string, StudySessionState>();
+
+// Study engine instances (per-user in production, global for demo)
+const spacedRepetition = new SpacedRepetition();
+const flashCardEngine = new FlashCardEngine(spacedRepetition);
+const knowledgeGraph = new KnowledgeGraph();
+const studyGoals = new StudyGoals();
+const quizGenerator = new QuizGenerator();
+const weaknessDetector = new WeaknessDetector();
 
 // ─── POST /api/study/start ────────────────────────────────────────────────
 app.post('/api/study/start', async (c) => {
@@ -184,6 +200,134 @@ app.post('/api/study/flashcard/review', async (c) => {
     repetitions: updated.repetitions,
     nextReview: new Date(updated.nextReview).toISOString(),
   });
+});
+
+// ─── GET /api/flashcards ──────────────────────────────────────────────────
+app.get('/api/flashcards', async (c) => {
+  const due = flashCardEngine.getDueCards();
+  const counts = spacedRepetition.getCardCounts();
+  return c.json({
+    due: due.map(d => ({ id: d.data.id, front: d.data.front, back: d.data.back, tags: d.data.tags, deck: d.data.deck, nextReview: d.sm2.nextReview, easeFactor: d.sm2.easeFactor, repetitions: d.sm2.repetitions })),
+    counts,
+  });
+});
+
+// ─── POST /api/flashcards/create ──────────────────────────────────────────
+app.post('/api/flashcards/create', async (c) => {
+  const body = await c.req.json<{ front: string; back: string; tags?: string[]; deck?: string }>();
+  if (!body.front || !body.back) return c.json({ error: 'front and back required' }, 400);
+  const card = flashCardEngine.createCard({ front: body.front, back: body.back, tags: body.tags ?? [], deck: body.deck ?? 'default' });
+  return c.json(card);
+});
+
+// ─── GET /api/progress ────────────────────────────────────────────────────
+app.get('/api/progress', async (c) => {
+  const kmStats = knowledgeGraph.getStats();
+  const srCounts = spacedRepetition.getCardCounts();
+  const weaknesses = weaknessDetector.detectWeaknesses();
+  const strengths = weaknessDetector.getStrengths();
+  const activeGoals = studyGoals.getActive();
+  const completedGoals = studyGoals.getCompleted();
+
+  // Aggregate from all sessions
+  let totalPoints = 0;
+  let streak = 0;
+  let totalQuizResults = 0;
+  let correctQuizResults = 0;
+  for (const session of sessions.values()) {
+    totalPoints += session.progress.totalPoints;
+    streak = Math.max(streak, session.progress.streak);
+    totalQuizResults += session.progress.quizResults.length;
+    correctQuizResults += session.progress.quizResults.filter(r => r.correct).length;
+  }
+
+  return c.json({
+    points: totalPoints,
+    streak,
+    accuracy: totalQuizResults > 0 ? correctQuizResults / totalQuizResults : 0,
+    flashcardCounts: srCounts,
+    knowledgeMap: kmStats,
+    weaknesses: weaknesses.slice(0, 5),
+    strengths: strengths.slice(0, 5),
+    goals: { active: activeGoals.length, completed: completedGoals.length },
+  });
+});
+
+// ─── GET /api/quiz ────────────────────────────────────────────────────────
+app.get('/api/quiz', async (c) => {
+  const concepts = c.req.query('concepts')?.split(',').filter(Boolean);
+  const difficulty = c.req.query('difficulty') ?? undefined;
+  const count = c.req.query('count') ? parseInt(c.req.query('count')!) : undefined;
+  const quiz = quizGenerator.generateQuiz('Study Quiz', { concepts, difficulty, count });
+  return c.json(quiz);
+});
+
+// ─── POST /api/quiz/submit ────────────────────────────────────────────────
+app.post('/api/quiz/submit', async (c) => {
+  const body = await c.req.json<{ quizId: string; answers: Record<string, string> }>();
+  const quiz = quizGenerator.generateQuiz('temp'); // In production, retrieve stored quiz
+  const attempt = quizGenerator.scoreAttempt(quiz, body.answers);
+
+  // Record each answer for weakness detection
+  for (const q of quiz.questions) {
+    const given = body.answers[q.id];
+    weaknessDetector.recordAnswer({
+      concept: q.concept,
+      correct: given?.toLowerCase().trim() === q.correctAnswer.toLowerCase().trim(),
+      timestamp: Date.now(),
+      difficulty: q.difficulty,
+    });
+  }
+
+  return c.json({
+    score: attempt.score,
+    totalPoints: attempt.totalPoints,
+    percentage: attempt.totalPoints > 0 ? attempt.score / attempt.totalPoints : 0,
+  });
+});
+
+// ─── GET /api/study/knowledge-map ─────────────────────────────────────────
+app.get('/api/study/knowledge-map', async (c) => {
+  const nodes = knowledgeGraph.getAllNodes();
+  const edges = knowledgeGraph.getAllEdges();
+  const weakAreas = knowledgeGraph.getWeakAreas();
+  const nextToLearn = knowledgeGraph.getNextToLearn();
+  return c.json({ nodes, edges, weakAreas, nextToLearn: nextToLearn ?? null });
+});
+
+// ─── POST /api/study/knowledge-map/node ───────────────────────────────────
+app.post('/api/study/knowledge-map/node', async (c) => {
+  const body = await c.req.json<{ label: string; mastery?: number; prerequisites?: string[]; tags?: string[] }>();
+  if (!body.label) return c.json({ error: 'label required' }, 400);
+  const node = knowledgeGraph.addNode({
+    label: body.label,
+    mastery: body.mastery ?? 0,
+    prerequisites: body.prerequisites ?? [],
+    tags: body.tags ?? [],
+  });
+  return c.json(node);
+});
+
+// ─── GET /api/study/goals ─────────────────────────────────────────────────
+app.get('/api/study/goals', async (c) => {
+  return c.json({
+    active: studyGoals.getActive(),
+    completed: studyGoals.getCompleted(),
+  });
+});
+
+// ─── POST /api/study/goals ────────────────────────────────────────────────
+app.post('/api/study/goals', async (c) => {
+  const body = await c.req.json<{ title: string; target: number; type: 'mastery' | 'pomodoros' | 'cards_reviewed' | 'quiz_score'; deadline?: number }>();
+  if (!body.title || !body.target) return c.json({ error: 'title and target required' }, 400);
+  const goal = studyGoals.addGoal({
+    title: body.title,
+    target: body.target,
+    current: 0,
+    deadline: body.deadline ?? Date.now() + 7 * 24 * 60 * 60 * 1000, // default 1 week
+    type: body.type,
+  });
+  return c.json(goal);
 });
 
 // ─── GET /api/study/stream (SSE) ─────────────────────────────────────────

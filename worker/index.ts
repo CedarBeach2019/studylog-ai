@@ -18,6 +18,7 @@ import healthRoutes from './routes/health.js';
 import metricsRoutes from './routes/metrics.js';
 import configRoutes from './routes/config.js';
 import appRoutes from './routes/app-routes.js';
+import studyRoutes from './routes/study.js';
 import { getThemeCSS } from './app-config.js';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -33,6 +34,9 @@ app.use('*', cors({
 // Public routes
 app.route('/v1/auth', authRoutes);
 app.route('/v1/health', healthRoutes);
+
+// Study API routes (public for demo, add authMiddleware in production)
+app.route('/', studyRoutes);
 
 // Protected routes
 const protectedApi = new Hono<{ Bindings: Env; Variables: Variables }>();
