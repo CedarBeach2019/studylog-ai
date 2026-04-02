@@ -1,10 +1,8 @@
 name = "studylog-ai"
 main = "src/worker.ts"
-compatibility_date = "2024-09-23"
+compatibility_date = "2025-03-01"
+compatibility_flags = ["nodejs_compat"]
 
 [[kv_namespaces]]
-binding = "PROFILES_KV"
-id = "YOUR_KV_ID_HERE"
-
-[vars]
-ENVIRONMENT = "production"
+binding = "STUDYLOG_KV"
+id = "982320c4390f411c89f44ba2e539b44a"
