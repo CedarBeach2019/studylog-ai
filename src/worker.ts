@@ -54,7 +54,7 @@ footer{text-align:center;padding:2rem;color:#475569;font-size:.8rem}
 </div>
 <div class="cta"><a href="/setup">Get Started →</a></div>
 <footer>StudyLog.ai — Part of the LogOS ecosystem. Built with zero runtime dependencies.</footer>
-</body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+</body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://api.deepseek.com https://api.groq.com https://api.mistral.ai https://openrouter.ai https://api.z.ai https://*;" } });
 }
 
 function setupPage(): Response {
@@ -82,7 +82,7 @@ a{display:block;text-align:center;color:#94a3b8;margin-top:1rem;text-decoration:
 async function save(){const p=document.getElementById('provider').value,k=document.getElementById('apiKey').value,m=document.getElementById('model').value;
 const r=await fetch('/api/byok',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:p,apiKey:k,model:m})});
 if(r.ok)window.location.href='/';else alert('Error: '+(await r.text()));}
-</script></body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+</script></body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://api.deepseek.com https://api.groq.com https://api.mistral.ai https://openrouter.ai https://api.z.ai https://*;" } });
 }
 
 function json(data: unknown, status = 200): Response {
