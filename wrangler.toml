@@ -1,21 +1,10 @@
 name = "studylog-ai"
-main = "worker/index.ts"
-compatibility_date = "2025-03-01"
-compatibility_flags = ["nodejs_compat"]
-
-[assets]
-directory = "./web"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "studylog-ai"
-database_id = ""
+main = "src/worker.ts"
+compatibility_date = "2024-09-23"
 
 [[kv_namespaces]]
-binding = "KV"
-id = ""
+binding = "PROFILES_KV"
+id = "YOUR_KV_ID_HERE"
 
 [vars]
 ENVIRONMENT = "production"
-THEME = "study"
-DOMAIN = "education"

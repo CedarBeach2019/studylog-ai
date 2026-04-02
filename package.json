@@ -1,31 +1,12 @@
 {
-  "name": "log-origin",
-  "version": "0.1.0",
+  "name": "studylog-ai",
+  "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "wrangler d1 execute log-origin-db --file=./migrations/0001_initial.sql",
-    "test": "vitest",
-    "test:ci": "vitest run",
-    "lint": "tsc --noEmit",
-    "cf-typegen": "wrangler types"
-  },
-  "dependencies": {
-    "hono": "^4.7.0",
-    "drizzle-orm": "^0.39.0"
+    "deploy": "wrangler deploy"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.8.0",
-    "@cloudflare/workers-types": "^4.20250320.0",
-    "drizzle-kit": "^0.30.0",
-    "hono": "^4.7.0",
-    "preact": "^10.25.0",
-    "typescript": "^5.7.0",
-    "vitest": "^3.0.0",
-    "wrangler": "^4.0.0",
-    "@types/node": "^22.0.0"
+    "wrangler": "^3.0.0"
   }
 }

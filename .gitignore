@@ -1,7 +1,4 @@
 node_modules/
+dist/
 .wrangler/
 .dev.vars
-.env
-dist/
-*.db
-*.sqlite
