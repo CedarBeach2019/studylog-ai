@@ -100,6 +100,15 @@ export default {
     const path = url.pathname;
     const method = request.method;
 
+    if (path === '/api/evaporation') {
+      return json({ hot: [], warm: [], coverage: 0, repo: 'studylog-ai', timestamp: Date.now() });
+    }
+    if (path === '/api/kg') {
+      return json({ nodes: [], edges: [], domain: 'studylog-ai', timestamp: Date.now() });
+    }
+    if (path === '/api/memory') {
+      return json({ patterns: [], repo: 'studylog-ai', timestamp: Date.now() });
+    }
     if (path === '/api/confidence') {
       const scores = await getConfidence(env);
       return json(scores);
