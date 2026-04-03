@@ -84,6 +84,12 @@ export const BUILTIN_PROVIDERS: LLMProvider[] = [
     models: ['llama3.1:8b', 'mistral:7b', 'codellama:7b', 'phi3:mini', 'gemma2:9b', 'qwen2:7b'],
     helpUrl: 'https://ollama.ai', color: '#6d28d9',
   },
+  {
+    id: 'siliconflow', name: 'SiliconFlow', baseUrl: 'https://api.siliconflow.com/v1',
+    defaultModel: 'deepseek-ai/DeepSeek-V3.2', authType: 'bearer',
+    models: ['deepseek-ai/DeepSeek-V3.2', 'deepseek-ai/DeepSeek-R1', 'zai-org/GLM-5', 'zai-org/GLM-5V-Turbo', 'moonshotai/Kimi-K2.5', 'Qwen/Qwen3-VL-235B-A22B-Instruct', 'MiniMaxAI/MiniMax-M2.5', 'stepfun-ai/Step-3.5-Flash'],
+    helpUrl: 'https://cloud.siliconflow.cn', color: '#6366f1',
+  },
 ];
 
 export function getBuiltinProviders(): LLMProvider[] {
