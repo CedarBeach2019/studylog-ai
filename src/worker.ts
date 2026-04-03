@@ -13,6 +13,8 @@ import { callLLM, loadBYOKConfig, saveBYOKConfig, type BYOKConfig, type LLMMessa
 import { createProfile, getProfile, updateProfile, listProfiles, deleteProfile, getModelForRole, type StudentProfile } from './lib/multi-profile.js';
 import { RepoAgent, type RepoAgentAction } from './lib/repo-agent.js';
 import { CrossCocapn } from './lib/cross-cocapn.js';
+import { deadbandCheck, deadbandStore, getEfficiencyStats } from './lib/deadband.js';
+import { logResponse } from './lib/response-logger.js';
 
 // ── Instances ──────────────────────────────────────────────────────────────
 
