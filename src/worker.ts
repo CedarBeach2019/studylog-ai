@@ -1,3 +1,4 @@
+import { softActualize, confidenceScore } from './lib/soft-actualize.js';
 // ═══════════════════════════════════════════════════════════════════
 // StudyLog.ai — The Living Classroom
 // Worker entry point — no framework, pure fetch handler
@@ -128,8 +129,16 @@ export default {
     // ── Static routes ──────────────────────────────────────────────────
     if (path === '/' || path === '/index.html') return landingPage();
     if (path === '/setup') return setupPage();
-    if (path === '/health') return json({ status: 'ok', service: 'studylog-ai', version: '1.0.0', timestamp: Date.now() });
+    if (path === '/health') return json({ status: 'ok', service: 'studylog-ai', version: '1.1.0', agentCount: 5, modules: ['tutor','quiz-master','classmate','director','socratic','sm2','profiles','repo-agent','seed'], seedVersion: '2024.04', timestamp: Date.now() });
 
+
+    // ── Seed Route ───────────────────────────────────────────────────────
+    if (path === '/api/seed') return json({
+      domain: 'studylog-ai', description: 'Living classroom — AI tutors, spaced repetition, knowledge graphs', seedVersion: '2024.04',
+      principles: ['spaced repetition','active recall','interleaving','elaboration','dual coding','metacognition','feynman technique'],
+      socraticSteps: ['clarify assumptions','explore implications','test understanding','connect to prior knowledge','apply to new context'],
+      systemPrompt: 'You are StudyLog, an AI tutor using the Socratic method.'
+    });
     // ── BYOK ───────────────────────────────────────────────────────────
     if (path === '/api/byok' && method === 'GET') {
       const config = await loadBYOKConfig(request, env);
@@ -288,7 +297,8 @@ export default {
     if (path === '/api/quiz/submit' && method === 'POST') {
       const body = await request.json() as { answers: number[]; quizId: string };
       const correct = body.answers.filter(() => Math.random() > 0.3).length; // placeholder
-      return json({ correct, total: body.answers.length, score: Math.round((correct / body.answers.length) * 100) });
+      const conf = body.answers.length > 0 ? confidenceScore('quiz-submit', true, true) : 0.3;
+      return json({ correct, total: body.answers.length, score: Math.round((correct / body.answers.length) * 100), confidence: conf });
     }
 
     // ── Flashcards ─────────────────────────────────────────────────────
