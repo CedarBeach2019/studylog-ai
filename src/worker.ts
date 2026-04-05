@@ -56,6 +56,7 @@ a{display:block;text-align:center;color:#94a3b8;margin-top:1rem;text-decoration:
 </style></head><body>
 <div class="form"><h2>🔑 Bring Your Own Key</h2>
 <label>Provider</label><select id="provider">${providers}</select>
+<div style="font-size:.75rem;color:#64748b;margin-bottom:.8rem;text-align:center"><a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:#60a5fa">DeepSeek</a> · <a href="https://api.siliconflow.cn" target="_blank" style="color:#60a5fa">SiliconFlow</a> · <a href="https://platform.openai.com/api-keys" target="_blank" style="color:#60a5fa">OpenAI</a> · <a href="https://console.anthropic.com" target="_blank" style="color:#60a5fa">Anthropic</a> · <a href="https://cloud.deepinfra.com" target="_blank" style="color:#60a5fa">DeepInfra</a></div>
 <label>API Key</label><input id="apiKey" type="password" placeholder="sk-...">
 <label>Model (optional)</label><input id="model" placeholder="gpt-4o-mini">
 <button onclick="save()">Save & Start Learning</button>
